@@ -8,6 +8,7 @@ public class DecoApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(DecoApplication.class, args);
+		//8o8
 	}
 
 }
