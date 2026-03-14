@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="egovframework.project.hyodose.service.impl.HyoDoseMapper">
+
+    <select id="selectUserDeviceDetail" parameterType="int" resultType="egovMap">
+        SELECT 
+            U.user_id, U.name, U.target_glucose, U.max_insulin_daily,
+            D.device_id, D.hard_limit_per_dose, D.insulin_remaining, D.battery_level
+        FROM Users U
+        LEFT JOIN Devices D ON U.user_id = D.user_id
+        WHERE U.user_id = #{userId}
+    </select>
+
+    <update id="updateDeviceStatus" parameterType="map">
+        UPDATE Devices
+        SET 
+            insulin_remaining = #{insulinRemaining},
+            needle_count = #{needleCount},
+            battery_level = #{batteryLevel},
+            last_update = CURRENT_TIMESTAMP
+        WHERE device_id = #{deviceId}
+    </update>
+
+    <insert id="insertDevice" parameterType="map">
+        INSERT INTO Devices (
+            device_id, user_id, model_name, hard_limit_per_dose
+        ) VALUES (
+            #{deviceId}, #{userId}, #{modelName}, #{hardLimitPerDose}
+        )
+    </insert>
+
+    <insert id="insertClinicalLog" parameterType="map">
+        INSERT INTO ClinicalLogs (
+            user_id, device_id, glucose_level, last_dose_amount, last_dose_time, injection_status
+        ) VALUES (
+            #{userId}, #{deviceId}, #{glucoseLevel}, #{lastDoseAmount}, CURRENT_TIMESTAMP, #{injectionStatus}
+        )
+    </insert>
+
+</mapper>

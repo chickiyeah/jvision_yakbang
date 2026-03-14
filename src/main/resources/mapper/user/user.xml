@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="egovframework.project.hyodose.service.impl.UserMapper">
+
+    <insert id="insertUser" parameterType="map">
+        INSERT INTO Users (
+            login_id,       -- 로그인용 아이디
+            password,       -- 암호화된 비밀번호
+            name, 
+            age, 
+            gender, 
+            height, 
+            weight, 
+            target_glucose,
+            max_insulin_daily
+        ) VALUES (
+            #{loginId},
+            #{password},
+            #{name},
+            #{age},
+            #{gender},
+            #{height},
+            #{weight},
+            IFNULL(#{targetGlucose}, 100.0), -- 입력 없으면 기본값 100
+            IFNULL(#{maxInsulinDaily}, 50.0) -- 입력 없으면 기본값 50
+        )
+    </insert>
+
+    <select id="checkDuplicateId" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM Users
+        WHERE login_id = #{loginId}
+    </select>
+
+    <select id="actionLogin" parameterType="map" resultType="egovMap">
+        SELECT 
+            user_id, login_id, name, gender,
+            target_glucose, max_insulin_daily
+        FROM Users
+        WHERE login_id = #{loginId} 
+          AND password = #{password}
+    </select>
+
+    <update id="updateUserProfile" parameterType="map">
+        UPDATE Users
+        SET 
+            weight = #{weight},
+            height = #{height},
+            target_glucose = #{targetGlucose},
+            max_insulin_daily = #{maxInsulinDaily}
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteUser" parameterType="int">
+        DELETE FROM Users
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>
