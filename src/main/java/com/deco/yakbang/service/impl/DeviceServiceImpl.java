@@ -7,12 +7,13 @@ import org.springframework.stereotype.Service;
 import com.deco.yakbang.service.DeviceService;
 import com.deco.yakbang.service.vo.ClinicalLogVO;
 import com.deco.yakbang.service.vo.DeviceVO;
+import org.springframework.context.annotation.Bean;
 
 import jakarta.annotation.Resource;
 
 @Service("deviceService")
 public class DeviceServiceImpl extends EgovAbstractServiceImpl implements DeviceService {
-
+	
     @Resource(name = "deviceMapper")
     private DeviceMapper deviceMapper;
 
