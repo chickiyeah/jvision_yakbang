@@ -39,7 +39,7 @@ public class YakbangUserController {
     }
 
     @Operation(summary = "아이디 중복 체크", description = "사용자 아이디 중복 여부를 확인합니다.")
-    @GetMapping("/check-id")
+    @GetMapping("/check-id.do")
     public Map<String, Object> checkDuplicateId(@RequestParam("loginId") String loginId) throws Exception {
         Map<String, Object> resultMap = new HashMap<>();
         int count = userService.checkDuplicateId(loginId);
