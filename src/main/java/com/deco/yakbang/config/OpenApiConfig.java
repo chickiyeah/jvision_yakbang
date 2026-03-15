@@ -20,7 +20,7 @@ public class OpenApiConfig {
     private Info apiInfo() {
         return new Info()
                 .title("Yakbang API Documentation")
-                .description("약방(Yakbang) 서비스 API 명세서입니다.")
+                .description("약방(Yakbang) 서비스 API 명세서입니다. Copyright. Deco.")
                 .version("1.0.0");
     }
 }
