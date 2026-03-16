@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
 
 @Configuration
 public class OpenApiConfig {
@@ -13,6 +14,7 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
+        		.addServersItem(new Server().url("https://d-jvision.duckdns.org")) // 주소를 https로 고정!
                 .components(new Components())
                 .info(apiInfo());
     }
