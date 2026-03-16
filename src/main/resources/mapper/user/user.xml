@@ -15,7 +15,7 @@
             target_glucose,
             max_insulin_daily
         ) VALUES (
-            #{loginId},
+            #{userId},
             #{password},
             #{name},
             #{age},
@@ -30,15 +30,15 @@
     <select id="checkDuplicateId" parameterType="string" resultType="int">
         SELECT COUNT(*)
         FROM Users
-        WHERE user_id = #{loginId}
+        WHERE user_id = #{userId}
     </select>
 
     <select id="actionLogin" parameterType="map" resultType="egovMap">
         SELECT 
-            log_id, user_id, name, gender,
+            id, user_id, name, gender,
             target_glucose, max_insulin_daily
         FROM Users
-        WHERE user_id = #{loginId} 
+        WHERE user_id = #{userId} 
           AND password = #{password}
     </select>
 
@@ -49,12 +49,12 @@
             height = #{height},
             target_glucose = #{targetGlucose},
             max_insulin_daily = #{maxInsulinDaily}
-        WHERE log_id = #{userId}
+        WHERE id = #{id}
     </update>
 
     <delete id="deleteUser" parameterType="int">
         DELETE FROM Users
-        WHERE log_id = #{userId}
+        WHERE id = #{id}
     </delete>
 
 </mapper>

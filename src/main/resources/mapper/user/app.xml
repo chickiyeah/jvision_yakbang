@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deco.yakbang.service.impl.ActivityLogMapper">
+
+    <insert id="insertActivityLog" parameterType="com.deco.yakbang.service.vo.ActivityLogVO">
+        INSERT INTO ActivityLogs (
+            user_id,
+            step_count,
+            consumed_calories,
+            current_intake_amt,
+            max_intake_limit
+        ) VALUES (
+            #{userId},
+            #{stepCount},
+            #{consumedCalories},
+            #{currentIntakeAmt},
+            #{maxIntakeLimit}
+        )
+    </insert>
+
+</mapper>

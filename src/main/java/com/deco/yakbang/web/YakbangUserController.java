@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.egovframe.rte.psl.dataaccess.util.EgovMap;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.deco.yakbang.service.UserService;
@@ -29,17 +31,30 @@ public class YakbangUserController {
     @Operation(summary = "사용자 등록", description = "신규 사용자를 등록합니다.")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "등록할 사용자 정보",
-        content = @Content(schema = @Schema(example = "{\"loginId\": \"tester01\", \"password\": \"p@ssword\", \"name\": \"홍길동\", \"gender\": \"M\", \"age\": 70}")))
+        content = @Content(schema = @Schema(example = "{\"userId\": \"tester01\", \"password\": \"p@ssword\", \"name\": \"홍길동\", \"gender\": \"M\", \"age\": 70}")))
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "등록 성공", 
-            content = @Content(schema = @Schema(example = "{\"result\": \"success\"}")))
+        @ApiResponse(responseCode = "201", description = "등록 성공", 
+            content = @Content(schema = @Schema(example = "{\"result\": \"success\"}"))),
+        @ApiResponse(responseCode = "400", description = "아이디 중복오류", 
+        	content = @Content(schema = @Schema(example = "{\"result\": \"fail\", \"reason\":\"이미 사용중인 아이디입니다.\"}")))
     })
     @PostMapping("/register")
-    public Map<String, Object> registerUser(@RequestBody UserVO userVO) throws Exception {
+    public ResponseEntity<Map<String, Object>> registerUser(@RequestBody UserVO userVO) throws Exception {
+    	System.out.println(userVO.getName());
         Map<String, Object> resultMap = new HashMap<>();
-        userService.insertUser(userVO);
-        resultMap.put("result", "success");
-        return resultMap;
+        int count = userService.checkDuplicateId(userVO.getUserId());
+
+        if (count > 0) {
+        	resultMap.put("result", "fail");
+        	resultMap.put("reason", "이미 사용중인 아이디입니다.");
+        	 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultMap);
+        } else {	
+        	userService.insertUser(userVO);
+        	resultMap.put("result", "success");
+        	return ResponseEntity.status(HttpStatus.CREATED).body(resultMap);
+        }
+        
+       
     }
 
     @Operation(summary = "아이디 중복 체크", description = "사용자 아이디 중복 여부를 확인합니다.")
@@ -60,7 +75,7 @@ public class YakbangUserController {
     @Operation(summary = "로그인", description = "사용자 로그인을 처리합니다.")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "로그인 정보",
-        content = @Content(schema = @Schema(example = "{\"loginId\": \"admin\", \"password\": \"1234\"}")))
+        content = @Content(schema = @Schema(example = "{\"userId\": \"admin\", \"password\": \"1234\"}")))
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "로그인 성공", 
             content = @Content(schema = @Schema(example = "{\"result\": \"success\", \"user\": {\"user_id\": \"1\", \"name\": \"관리자\", \"gender\": \"M\"}}"))),
@@ -68,18 +83,19 @@ public class YakbangUserController {
             content = @Content(schema = @Schema(example = "{\"result\": \"fail\", \"message\": \"Invalid ID or Password\"}")))
     })
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody UserVO userVO) throws Exception {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody UserVO userVO) throws Exception {
         Map<String, Object> resultMap = new HashMap<>();
         EgovMap loginUser = userService.actionLogin(userVO);
         
         if (loginUser != null && !loginUser.isEmpty()) {
             resultMap.put("result", "success");
             resultMap.put("user", loginUser);
+            return ResponseEntity.status(HttpStatus.OK).body(resultMap);
         } else {
             resultMap.put("result", "fail");
             resultMap.put("message", "Invalid ID or Password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(resultMap);
         }
-        return resultMap;
     }
 
     @Operation(summary = "프로필 수정", description = "사용자 프로필 정보를 수정합니다.")
