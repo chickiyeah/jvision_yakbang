@@ -39,7 +39,7 @@ public class YakbangActivityLogController {
     public Map<String, Object> addWalkData(@RequestBody ActivityLogVO appVO) throws Exception {
         Map<String, Object> resultMap = new HashMap<>();
         
-        appService.insertActivityLog(appVO);
+        appService.insertActivityLog(appVO);//
         
         resultMap.put("result", "success");
         return resultMap;
