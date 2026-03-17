@@ -8,29 +8,22 @@ public class UserVO {
 
 
 
-	/** 사용자 ID (PK) */
+	// --- 기본 계정 정보 ---
+    private String userId;      // 로그인 ID
+    private String password;    // 해싱된 비밀번호
+    private String salt;        // 유저별 고유 솔트
+    private String name;        // 사용자 이름
+    private Integer age;        // 나이
+    private String gender;      // 성별 (M/F)
+
+    // --- 신체 및 당뇨 관리 정보 ---
+    private Double height;      // 키 (cm)
+    private Double weight;      // 몸무게 (kg)
+    private Double targetGlucose;    // 목표 혈당 (기본값: 100.0)
+    private Double maxInsulinDaily;  // 일일 최대 인슐린 (기본값: 50.0)
+
+    // --- DB 관리용 (필요 시) ---
     private int id;
-
-    /** 로그인 ID */
-    private String userId;
-
-    /** 비밀번호 */
-    private String password;
-
-    /** 이름 */
-    private String name;
-
-    /** 나이 */
-    private int age;
-
-    /** 성별 */
-    private String gender;
-
-    /** 키, 몸무게, 목표 혈당, 일일 최대 인슐린 등 */
-    private double height;
-    private double weight;
-    private double targetGlucose;
-    private double maxInsulinDaily;
 	public int getId() {
 		return id;
 	}
@@ -90,6 +83,12 @@ public class UserVO {
 	}
 	public void setMaxInsulinDaily(double maxInsulinDaily) {
 		this.maxInsulinDaily = maxInsulinDaily;
+	}
+	public String getSalt() {
+		return salt;
+	}
+	public void setSalt(String salt) {
+		this.salt = salt;
 	}
     
     

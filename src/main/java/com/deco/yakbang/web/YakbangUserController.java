@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 
-@Tag(name = "YakbangUser", description = "약방 사용자 API (JWT 인증 적용)")
+@Tag(name = "YakbangUser", description = "약방 사용자 API (JWT & Salt 보안 적용)")
 @SecurityScheme(
     name = "Bearer Authentication",
     type = SecuritySchemeType.HTTP,
@@ -41,7 +41,22 @@ public class YakbangUserController {
     @Resource
     private JwtTokenProvider jwtTokenProvider;
 
-    @Operation(summary = "사용자 등록", description = "신규 사용자를 등록합니다.")
+    @Operation(summary = "솔트 조회", description = "로그인 전 비밀번호 해싱을 위한 유저별 솔트값을 조회합니다.")
+    @GetMapping("/salt/{userId}")
+    public ResponseEntity<Map<String, String>> getUserSalt(
+            @Parameter(description = "조회할 유저 아이디", example = "tester01") @PathVariable("userId") String userId) throws Exception {
+        
+        String salt = userService.getSalt(userId);
+        if (salt != null) {
+            Map<String, String> resultMap = new HashMap<>();
+            resultMap.put("salt", salt);
+            return ResponseEntity.ok(resultMap);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @Operation(summary = "사용자 등록", description = "신규 사용자를 등록합니다. 서버에서 솔트를 생성하여 저장합니다.")
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody UserVO userVO) throws Exception {
         Map<String, Object> resultMap = new HashMap<>();
@@ -52,6 +67,7 @@ public class YakbangUserController {
             resultMap.put("reason", "이미 사용중인 아이디입니다.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultMap);
         } else {
+            // Service 내부에서 Salt 생성 및 해싱 처리
             userService.insertUser(userVO);
             resultMap.put("result", "success");
             return ResponseEntity.status(HttpStatus.CREATED).body(resultMap);
@@ -68,31 +84,39 @@ public class YakbangUserController {
         return resultMap;
     }
 
-    @Operation(summary = "로그인", description = "사용자 로그인을 처리하고 JWT 토큰을 발급합니다.")
+    @Operation(summary = "로그인", description = "ID와 해싱된 PW로 로그인을 처리하고 AT/RT를 발급합니다.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "로그인 성공 (토큰 포함)", 
-            content = @Content(schema = @Schema(example = "{\"result\": \"success\", \"accessToken\": \"eyJhbG...\", \"user\": {\"userId\": \"admin\"}}"))),
+        @ApiResponse(responseCode = "200", description = "로그인 성공", 
+            content = @Content(schema = @Schema(example = "{\"result\": \"success\", \"accessToken\": \"at_value\", \"refreshToken\": \"rt_value\", \"user\": {...}}"))),
         @ApiResponse(responseCode = "401", description = "로그인 실패")
     })
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody UserVO userVO) throws Exception {
-        Map<String, Object> resultMap = new HashMap<>();
-        EgovMap loginUser = userService.actionLogin(userVO);
+        // Service에서 AT/RT 발급 및 RT DB 저장 로직 수행
+        Map<String, Object> loginResult = userService.processLogin(userVO);
         
-        if (loginUser != null && !loginUser.isEmpty()) {
-            // JWT 토큰 생성 (userId와 name 기반)
-            String userId = String.valueOf(loginUser.get("userId"));
-            String userName = String.valueOf(loginUser.get("name"));
-            String token = jwtTokenProvider.createToken(userId, userName);
-
-            resultMap.put("result", "success");
-            resultMap.put("accessToken", token); // 클라이언트는 이 토큰을 저장해야 함
-            resultMap.put("user", loginUser);
-            return ResponseEntity.ok(resultMap);
+        if (loginResult != null) {
+            return ResponseEntity.ok(loginResult);
         } else {
-            resultMap.put("result", "fail");
-            resultMap.put("message", "Invalid ID or Password");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(resultMap);
+            Map<String, Object> failMap = new HashMap<>();
+            failMap.put("result", "fail");
+            failMap.put("message", "Invalid ID or Password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(failMap);
+        }
+    }
+
+    @Operation(summary = "토큰 갱신", description = "리프레시 토큰을 이용하여 새로운 액세스 토큰을 발급합니다.")
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) throws Exception {
+        String refreshToken = request.get("refreshToken");
+        
+        // 토큰 유효성 및 DB 대조 (Service 로직 호출)
+        Map<String, Object> refreshResult = userService.refreshAccessToken(refreshToken);
+        
+        if (refreshResult != null) {
+            return ResponseEntity.ok(refreshResult);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Refresh Token");
         }
     }
 
@@ -106,10 +130,11 @@ public class YakbangUserController {
         return resultMap;
     }
 
-    @Operation(summary = "사용자 삭제", description = "토큰 인증이 필요한 API입니다.",
+    @Operation(summary = "사용자 삭제", description = "사용자 계정을 삭제합니다.",
                security = @SecurityRequirement(name = "Bearer Authentication"))
     @DeleteMapping("/{userId}")
-    public Map<String, Object> deleteUser(@PathVariable("userId") int userId) throws Exception {
+    public Map<String, Object> deleteUser(
+        @Parameter(description = "삭제할 사용자 고유 ID", example = "1") @PathVariable("userId") int userId) throws Exception {
         Map<String, Object> resultMap = new HashMap<>();
         userService.deleteUser(userId);
         resultMap.put("result", "success");

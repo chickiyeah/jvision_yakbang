@@ -3,10 +3,11 @@
 
 <mapper namespace="com.deco.yakbang.service.impl.UserMapper">
 
-    <insert id="insertUser" parameterType="map">
+    <insert id="insertUser" parameterType="com.deco.yakbang.service.vo.UserVO">
         INSERT INTO Users (
-            user_id,       -- 로그인용 아이디
-            password,       -- 암호화된 비밀번호
+            user_id,        -- 로그인용 아이디
+            password,       -- 솔트와 결합하여 해싱된 비밀번호
+            salt,           -- 유저별 고유 솔트값
             name, 
             age, 
             gender, 
@@ -17,13 +18,14 @@
         ) VALUES (
             #{userId},
             #{password},
+            #{salt},
             #{name},
             #{age},
             #{gender},
             #{height},
             #{weight},
-            IFNULL(#{targetGlucose}, 100.0), -- 입력 없으면 기본값 100
-            IFNULL(#{maxInsulinDaily}, 50.0) -- 입력 없으면 기본값 50
+            IFNULL(#{targetGlucose}, 100.0),
+            IFNULL(#{maxInsulinDaily}, 50.0)
         )
     </insert>
 
@@ -33,23 +35,56 @@
         WHERE user_id = #{userId}
     </select>
 
-    <select id="actionLogin" parameterType="map" resultType="egovMap">
+    <select id="getSaltByUserId" parameterType="string" resultType="string">
+        SELECT salt
+        FROM Users
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="actionLogin" parameterType="com.deco.yakbang.service.vo.UserVO" resultType="egovMap">
         SELECT 
-            id, user_id, name, gender,
-            target_glucose, max_insulin_daily
+            id,             -- 고유 일련번호 (PK)
+            user_id,        -- 로그인 아이디
+            name, 
+            gender,
+            target_glucose, 
+            max_insulin_daily
         FROM Users
         WHERE user_id = #{userId} 
           AND password = #{password}
     </select>
 
-    <update id="updateUserProfile" parameterType="map">
+    <insert id="upsertRefreshToken" parameterType="map">
+        INSERT INTO TB_REFRESH_TOKEN (
+            user_id, 
+            token_value, 
+            expiry_date
+        ) VALUES (
+            #{userId}, 
+            #{tokenValue}, 
+            DATE_ADD(NOW(), INTERVAL 7 DAY)
+        )
+        ON DUPLICATE KEY UPDATE 
+            token_value = #{tokenValue},
+            expiry_date = DATE_ADD(NOW(), INTERVAL 7 DAY)
+    </insert>
+
+    <select id="getRefreshToken" parameterType="string" resultType="string">
+        SELECT token_value
+        FROM TB_REFRESH_TOKEN
+        WHERE user_id = #{userId}
+          AND expiry_date > NOW()
+    </select>
+
+    <update id="updateUserProfile" parameterType="com.deco.yakbang.service.vo.UserVO">
         UPDATE Users
         SET 
             weight = #{weight},
             height = #{height},
             target_glucose = #{targetGlucose},
-            max_insulin_daily = #{maxInsulinDaily}
-        WHERE id = #{id}
+            max_insulin_daily = #{maxInsulinDaily},
+            name = #{name}
+        WHERE user_id = #{userId}
     </update>
 
     <delete id="deleteUser" parameterType="int">
