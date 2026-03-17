@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.deco.yakbang.service.UserService;
 import com.deco.yakbang.service.vo.UserVO;
+import com.deco.yakbang.util.ResidentNumberUtil;
 import com.deco.yakbang.util.Sha256Util;
 import com.deco.yakbang.security.JwtTokenProvider;
 
@@ -33,9 +34,16 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void insertUser(UserVO userVO) throws Exception {
-        // 랜덤 솔트 생성 (Sha256Util 사용)
+        String resNum = userVO.getResidentNumber();
+        
+        if (resNum != null && resNum.contains("-")) {
+            // 주민번호 기반으로 성별과 나이 자동 계산
+            userVO.setGender(ResidentNumberUtil.getGender(resNum));
+            userVO.setAge(ResidentNumberUtil.getAge(resNum));
+        }
+
+        // 보안 로직 (Salt & Hashing)
         String salt = Sha256Util.getSalt();
-        // 비밀번호 + 솔트 결합 해싱
         String hashedPw = Sha256Util.encrypt(userVO.getPassword(), salt);
         
         userVO.setSalt(salt);

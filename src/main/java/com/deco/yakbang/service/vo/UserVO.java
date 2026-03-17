@@ -15,6 +15,7 @@ public class UserVO {
     private String name;        // 사용자 이름
     private Integer age;        // 나이
     private String gender;      // 성별 (M/F)
+    private String residentNumber; // 000304-3 형식으로 수신
 
     // --- 신체 및 당뇨 관리 정보 ---
     private Double height;      // 키 (cm)
@@ -89,6 +90,12 @@ public class UserVO {
 	}
 	public void setSalt(String salt) {
 		this.salt = salt;
+	}
+	public String getResidentNumber() {
+		return residentNumber;
+	}
+	public void setResidentNumber(String residentNumber) {
+		this.residentNumber = residentNumber;
 	}
     
     

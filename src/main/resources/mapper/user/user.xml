@@ -4,30 +4,16 @@
 <mapper namespace="com.deco.yakbang.service.impl.UserMapper">
 
     <insert id="insertUser" parameterType="com.deco.yakbang.service.vo.UserVO">
-        INSERT INTO Users (
-            user_id,        -- 로그인용 아이디
-            password,       -- 솔트와 결합하여 해싱된 비밀번호
-            salt,           -- 유저별 고유 솔트값
-            name, 
-            age, 
-            gender, 
-            height, 
-            weight, 
-            target_glucose,
-            max_insulin_daily
-        ) VALUES (
-            #{userId},
-            #{password},
-            #{salt},
-            #{name},
-            #{age},
-            #{gender},
-            #{height},
-            #{weight},
-            IFNULL(#{targetGlucose}, 100.0),
-            IFNULL(#{maxInsulinDaily}, 50.0)
-        )
-    </insert>
+    INSERT INTO Users (
+        user_id, password, salt, resident_number,
+        name, age, gender, height, weight, 
+        target_glucose, max_insulin_daily
+    ) VALUES (
+        #{userId}, #{password}, #{salt}, #{residentNumber},
+        #{name}, #{age}, #{gender}, #{height}, #{weight},
+        #{targetGlucose}, #{maxInsulinDaily}
+    )
+</insert>
 
     <select id="checkDuplicateId" parameterType="string" resultType="int">
         SELECT COUNT(*)
