@@ -30,28 +30,40 @@ public class UserServiceImpl implements UserService {
         return userMapper.getSaltByUserId(userId);
     }
 
-    /** 2. 회원가입: 랜덤 솔트 생성 및 비밀번호 해싱 저장 */
     @Override
     @Transactional
-    public void insertUser(UserVO userVO) throws Exception {
+    public Map<String, Object> insertUser(UserVO userVO) throws Exception {
+        // 1. 기존 가입 로직 (나이/성별 계산 및 해싱)
         String resNum = userVO.getResidentNumber();
-        
         if (resNum != null && resNum.contains("-")) {
-            // 주민번호 기반으로 성별과 나이 자동 계산
             userVO.setGender(ResidentNumberUtil.getGender(resNum));
             userVO.setAge(ResidentNumberUtil.getAge(resNum));
         }
-
-        // 보안 로직 (Salt & Hashing)
         String salt = Sha256Util.getSalt();
-        String hashedPw = Sha256Util.encrypt(userVO.getPassword(), salt);
-        
         userVO.setSalt(salt);
-        userVO.setPassword(hashedPw);
+        userVO.setPassword(Sha256Util.encrypt(userVO.getPassword(), salt));
         
         userMapper.insertUser(userVO);
-    }
 
+        // 2. ⭐ 가입 성공 즉시 토큰 생성 (자동 로그인용)
+        String at = jwtTokenProvider.createToken(userVO.getUserId(), userVO.getName());
+        String rt = jwtTokenProvider.createRefreshToken(userVO.getUserId());
+
+        // 3. RT DB 저장
+        Map<String, Object> rtParam = new HashMap<>();
+        rtParam.put("userId", userVO.getUserId());
+        rtParam.put("tokenValue", rt);
+        userMapper.upsertRefreshToken(rtParam);
+
+        // 4. 안드로이드가 기다리는 데이터 조립
+        Map<String, Object> result = new HashMap<>();
+        result.put("result", "success");
+        result.put("accessToken", at);
+        result.put("refreshToken", rt);
+        result.put("userId", userVO.getUserId());
+        
+        return result;
+    }
     /** 3. 아이디 중복 체크 */
     @Override
     public int checkDuplicateId(String loginId) throws Exception {

@@ -8,8 +8,9 @@ public interface UserService {
 
     /** * 회원가입 
      * 내부적으로 랜덤 솔트를 생성하고 비밀번호를 해싱하여 저장합니다.
+     * @return 
      */
-    void insertUser(UserVO userVO) throws Exception;
+    Map<String, Object> insertUser(UserVO userVO) throws Exception;
 
     /** * 아이디 중복 체크 
      */
