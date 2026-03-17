@@ -18,7 +18,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // REST API이므로 csrf 비활성화
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 미사용
             .authorizeHttpRequests(auth -> auth
-            	.requestMatchers("/", "/index.html", "/favicon.ico", "/static/**", "/css/**", "/js/**").permitAll()
+            	.requestMatchers("/","/error", "/index.html", "/favicon.ico", "/static/**", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/yakbang/api/user/login", "/yakbang/api/user/register", "/yakbang/api/user/check-id.do", "/yakbang/api/user/salt/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll() // Swagger 허용
                 .requestMatchers("/yakbang/api/app/**").authenticated() // 이 줄이 추가되어야 합니다.
