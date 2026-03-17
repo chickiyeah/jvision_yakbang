@@ -68,9 +68,8 @@ public class YakbangUserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultMap);
         } else {
             // Service 내부에서 Salt 생성 및 해싱 처리
-            userService.insertUser(userVO);
-            resultMap.put("result", "success");
-            return ResponseEntity.status(HttpStatus.CREATED).body(resultMap);
+        	Map<String, Object> result = userService.insertUser(userVO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
         }
     }
 
