@@ -26,6 +26,14 @@
         FROM Users
         WHERE user_id = #{userId}
     </select>
+    
+    <select id="getUserProfile" parameterType="string" resultType="egovMap">
+	    SELECT 
+	        user_id, name, age, gender, height, weight, 
+	        target_glucose, max_insulin_daily, resident_number
+	    FROM Users
+	    WHERE user_id = #{userId}
+	</select>
 
     <select id="actionLogin" parameterType="com.deco.yakbang.service.vo.UserVO" resultType="egovMap">
         SELECT 

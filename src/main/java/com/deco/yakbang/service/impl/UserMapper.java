@@ -20,6 +20,9 @@ public interface UserMapper {
 
     /** 4. 로그인 처리: 해싱된 PW와 ID 대조 */
     EgovMap actionLogin(UserVO userVO) throws Exception;
+    
+ // UserMapper.java 추가
+    EgovMap getUserProfile(String userId) throws Exception;
 
     /** 5. 리프레시 토큰 저장 및 갱신 (UPSERT) */
     void upsertRefreshToken(Map<String, Object> params) throws Exception;

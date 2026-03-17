@@ -43,4 +43,6 @@ public interface UserService {
     /** * 기존 로그인 메서드 (호환성 유지용) 
      */
     EgovMap actionLogin(UserVO userVO) throws Exception;
+
+	EgovMap getUserProfile(String userId) throws Exception;
 }

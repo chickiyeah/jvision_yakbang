@@ -6,6 +6,7 @@ import java.util.Map;
 import org.egovframe.rte.psl.dataaccess.util.EgovMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.deco.yakbang.service.UserService;
@@ -116,6 +117,22 @@ public class YakbangUserController {
             return ResponseEntity.ok(refreshResult);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Refresh Token");
+        }
+    }
+    
+    @Operation(summary = "내 프로필 조회", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @GetMapping("/profile")
+    public ResponseEntity<EgovMap> getMyProfile() throws Exception {
+        // 1. SecurityContext에서 현재 로그인한 유저 ID 추출
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        // 2. DB 조회
+        EgovMap profile = userService.getUserProfile(userId);
+        
+        if (profile != null) {
+            return ResponseEntity.ok(profile);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

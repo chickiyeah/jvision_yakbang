@@ -29,6 +29,11 @@ public class UserServiceImpl implements UserService {
     public String getSalt(String userId) throws Exception {
         return userMapper.getSaltByUserId(userId);
     }
+    
+    @Override
+    public EgovMap getUserProfile(String userId) throws Exception {
+        return userMapper.getUserProfile(userId);
+    }
 
     @Override
     @Transactional
