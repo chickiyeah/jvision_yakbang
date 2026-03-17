@@ -3,7 +3,6 @@ package com.deco.yakbang.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -13,39 +12,71 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret}") // application.yml의 설정을 통해 젠킨스 주입값을 가져옴
-    private String secretString;
+    // Access Token 유효시간: 10시간
+    private final long accessTokenValidity = 1000L * 60 * 60 * 10;
+    // Refresh Token 유효시간: 7일
+    private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 7; 
 
-    private final long tokenValidity = 1000L * 60 * 60 * 10; // 10시간
     private SecretKey key;
 
     @PostConstruct
     protected void init() {
-        // 젠킨스에서 주입된 문자열을 암호화 키 객체로 변환
-        this.key = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
+        // 1. 젠킨스가 주입한 시스템 환경 변수를 우선적으로 읽음
+        String secret = System.getenv("JWT_SECRET_KEY");
+        
+        // 2. 환경 변수가 없을 경우를 대비한 32자 이상의 안전한 기본키 (서버 기동 보장)
+        if (secret == null || secret.isEmpty()) {
+            secret = "yakbang_default_secure_secret_key_32_chars_2026";
+            System.err.println("⚠️ [JWT] 환경변수 JWT_SECRET_KEY를 찾을 수 없어 기본키를 사용합니다.");
+        }
+        
+        // 3. 키 객체 생성
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+    /** * Access Token 생성 (10시간) */
     public String createToken(String userId, String name) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(userId)
                 .claim("name", name)
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + tokenValidity))
+                .expiration(new Date(now.getTime() + accessTokenValidity))
                 .signWith(key)
                 .compact();
     }
 
-    public String getUserId(String token) {
-        return Jwts.parser().verifyWith(key).build()
-                .parseSignedClaims(token).getPayload().getSubject();
+    /** * Refresh Token 생성 (7일) - 이 부분이 추가되었습니다! */
+    public String createRefreshToken(String userId) {
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(userId)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + refreshTokenValidity))
+                .signWith(key)
+                .compact();
     }
 
+    /** * 토큰에서 유저 ID 추출 */
+    public String getUserId(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    /** * 토큰 유효성 및 만료 여부 확인 */
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
+            // 토큰이 위조되었거나 만료되었을 경우 false 반환
             return false;
         }
     }
