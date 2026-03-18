@@ -8,6 +8,13 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collections;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 
 @Component
 public class JwtTokenProvider {
@@ -79,5 +86,21 @@ public class JwtTokenProvider {
             // 토큰이 위조되었거나 만료되었을 경우 false 반환
             return false;
         }
+    }
+    
+    public Authentication getAuthentication(String token) {
+        // 1. 토큰을 복호화해서 Claims(내용물)를 꺼냅니다.
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        // 2. 권한 정보가 지금은 따로 없으므로 빈 리스트로 처리합니다.
+        // (나중에 관리자/일반유저 구분이 필요하면 여기서 처리합니다.)
+        UserDetails principal = new User(claims.getSubject(), "", Collections.emptyList());
+
+        // 3. 인증 객체를 리턴 (principal: 유저정보, "": 비밀번호(불필요), 권한리스트)
+        return new UsernamePasswordAuthenticationToken(principal, token, Collections.emptyList());
     }
 }

@@ -6,10 +6,19 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.deco.yakbang.security.JwtAuthenticationFilter;
+import com.deco.yakbang.security.JwtTokenProvider;
+
+import jakarta.annotation.Resource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+	
+	@Resource
+    private JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -23,7 +32,11 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll() // Swagger 허용
                 .requestMatchers("/yakbang/api/app/**").authenticated() // 이 줄이 추가되어야 합니다.
                 .anyRequest().authenticated() // 그 외 profile, delete 등은 인증 필요
-            );
+            )
+            .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), 
+                    UsernamePasswordAuthenticationFilter.class);
+        
+        
         
         return http.build();
     }
