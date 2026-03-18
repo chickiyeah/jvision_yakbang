@@ -32,7 +32,9 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public EgovMap getUserProfile(String userId) throws Exception {
-        return userMapper.getUserProfile(userId);
+    	EgovMap map = userMapper.getUserProfile(userId);
+    	System.out.println(map.valueList());
+        return map;
     }
 
     @Override
